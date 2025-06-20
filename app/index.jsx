@@ -1,6 +1,6 @@
 import AntDesign from '@expo/vector-icons/AntDesign';
 import Feather from '@expo/vector-icons/Feather';
-import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import MultiSlider from '@ptomasroos/react-native-multi-slider';
 import { useState } from 'react';
 import { SafeAreaView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
@@ -14,7 +14,7 @@ export default function Index() {
   const { width, height } = useWindowDimensions();
 
   const [isPlaying, setIsPlaying] = useState(false)
-  const [isMuted, setIsMuted] = useState(false)
+  const [isMetronomePlaying, setIsMetronomePlaying] = useState(false)
   const [mood, setMood] = useState(1)
   const [tempo, setTempo] = useState([120])
 
@@ -52,7 +52,7 @@ export default function Index() {
                 </View>
               </View>
               <View style={{ alignItems: 'center' }}>
-                <Text style={[styles.text, { fontSize: 15 }]}>ADJUST SPEED</Text>
+                <Text style={[styles.text, { fontSize: 15 }]}>ADJUST SPEED - {tempo} BPM</Text>
                 <MultiSlider
                   values={tempo}
                   min={60}
@@ -77,8 +77,8 @@ export default function Index() {
             </View>
             <View style={{ height: 20 }} />
             <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-              <TouchableOpacity style={[styles.smallButton, { width: "43%", backgroundColor: isMuted ? "#ab5656" : darkGrey }]} onPress={() => setIsMuted(prev => !prev)}>
-                <FontAwesome5 name="volume-mute" size={35} color={lightGrey} />
+              <TouchableOpacity style={[styles.smallButton, { width: "43%", backgroundColor: isMetronomePlaying ? "#4f9e73" : darkGrey }]} onPress={() => setIsMetronomePlaying(prev => !prev)}>
+                <MaterialCommunityIcons name="metronome" size={35} color={lightGrey} />
               </TouchableOpacity>
               <TouchableOpacity style={[styles.smallButton, { width: "53%" }]} onPress={() => setIsPlaying(prev => !prev)}>
                 <Text style={[styles.text, { fontSize: 18 }]}>{isPlaying ? 'PAUSE' : 'PLAY'}</Text>
