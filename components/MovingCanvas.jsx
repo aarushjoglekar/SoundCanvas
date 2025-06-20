@@ -1,46 +1,55 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Dimensions, PanResponder, View } from 'react-native';
 import Animated, {
+  runOnJS,
   useAnimatedStyle,
-  useSharedValue
+  useSharedValue,
 } from 'react-native-reanimated';
 import Svg, { G, Path } from 'react-native-svg';
 
-const { width, height } = Dimensions.get('window');
+const { height } = Dimensions.get('window');
 
 export default function MovingCanvas({ style, scrolling }) {
-  const [paths, setPaths] = useState([]);
+  const [paths, setPaths] = useState([]); // paths: { d: string, color: string }[]
   const currentPoints = useRef([]);
   const scrollX = useSharedValue(0);
+  const hue = useSharedValue(0);
   const speed = -60; // pixels per second (leftward)
+
+  const [currentHue, setCurrentHue] = useState(0);
 
   const [, setTick] = useState(false);
   const forceRender = () => setTick((v) => !v);
 
-  // Frame-based animation using JS (compatible with Expo Go)
+  // Animate scrollX and hue continuously
   useEffect(() => {
-    let lastTimestamp = Date.now();
     let running = true;
+    let lastTimestamp = Date.now();
 
     const step = () => {
       if (!running) return;
-
       const now = Date.now();
       const deltaSec = (now - lastTimestamp) / 1000;
+
       if (scrolling) {
         scrollX.value += speed * deltaSec;
       }
-      lastTimestamp = now;
 
+      hue.value = (hue.value + 120 * deltaSec) % 360; // hue changes 120 deg per second
+      runOnJS(setCurrentHue)(hue.value);
+
+      lastTimestamp = now;
       requestAnimationFrame(step);
     };
 
     requestAnimationFrame(step);
+
     return () => {
       running = false;
     };
   }, [scrolling]);
 
+  // Setup PanResponder with drawing enabled only when scrolling is true
   const [panResponder, setPanResponder] = useState(null);
 
   useEffect(() => {
@@ -63,39 +72,42 @@ export default function MovingCanvas({ style, scrolling }) {
       onPanResponderRelease: () => {
         if (!scrolling) return;
         const adjustedPath = currentPoints.current.join(' ');
-        setPaths((prev) => [...prev, adjustedPath]);
+        setPaths((prev) => [
+          ...prev,
+          { d: adjustedPath, color: `hsl(${currentHue}, 60%, 45%)` },
+        ]);
         currentPoints.current = [];
       },
     });
     setPanResponder(responder);
-  }, [scrolling]);
+  }, [scrolling, currentHue]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: scrollX.value }],
   }));
 
+  // Current brush color (rainbow)
+  const currentColor = `hsl(${currentHue}, 60%, 45%)`;
+
   return (
-    <View
-      {...(panResponder ? panResponder.panHandlers : {})}
-      style={style}
-    >
+    <View {...(panResponder ? panResponder.panHandlers : {})} style={style}>
       <Animated.View style={[{ position: 'absolute' }, animatedStyle]}>
         <Svg width={10000} height={height}>
           <G>
-            {paths.map((d, index) => (
+            {paths.map(({ d, color }, index) => (
               <Path
                 key={index}
                 d={d}
-                stroke="black"
-                strokeWidth={5}
+                stroke={color}
+                strokeWidth={6}
                 fill="none"
               />
             ))}
             {currentPoints.current.length > 0 && (
               <Path
                 d={currentPoints.current.join(' ')}
-                stroke="black"
-                strokeWidth={5}
+                stroke={currentColor}
+                strokeWidth={6}
                 fill="none"
               />
             )}
