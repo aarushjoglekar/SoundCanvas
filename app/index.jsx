@@ -4,6 +4,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import MultiSlider from '@ptomasroos/react-native-multi-slider';
 import { useState } from 'react';
 import { SafeAreaView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import MovingCanvas from "../components/MovingCanvas";
 
 const lightGrey = '#e6e6e6'
 const mediumLightGrey = '#8f8e96'
@@ -24,8 +25,7 @@ export default function Index() {
         <View style={{ height: 20 }} />
         <View style={{ flex: 1, flexDirection: 'row' }}>
           <View style={{ flex: 12 }}>
-            <View style={styles.panel}>
-            </View>
+            <MovingCanvas style={[styles.panel, {overflow: 'hidden'}]} scrolling={isPlaying}/>
             <View style={{ height: 20 }} />
             <View style={{ height: 80, justifyContent: 'center' }}>
               <Text style={[styles.text, { fontSize: 40, textAlign: 'left', marginLeft: 20 }]}>SOUND CANVAS</Text>
