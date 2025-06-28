@@ -1,6 +1,6 @@
 import { Audio } from 'expo-av';
 import React, { useEffect, useRef, useState } from 'react';
-import { Dimensions, PanResponder, View } from 'react-native';
+import { PanResponder, View } from 'react-native';
 import Animated, {
   runOnJS,
   useAnimatedStyle,
@@ -8,27 +8,43 @@ import Animated, {
 } from 'react-native-reanimated';
 import Svg, { G, Path } from 'react-native-svg';
 
-const { height } = Dimensions.get('window');
+const ROWS = 15;
+
+const soundPaths = [
+  require("../assets/sounds/1.mp3"),
+  require("../assets/sounds/2.mp3"),
+  require("../assets/sounds/3.mp3"),
+  require("../assets/sounds/4.mp3"),
+  require("../assets/sounds/5.mp3"),
+  require("../assets/sounds/6.mp3"),
+  require("../assets/sounds/7.mp3"),
+  require("../assets/sounds/8.mp3"),
+  require("../assets/sounds/9.mp3"),
+  require("../assets/sounds/10.mp3"),
+  require("../assets/sounds/11.mp3"),
+  require("../assets/sounds/12.mp3"),
+  require("../assets/sounds/13.mp3"),
+  require("../assets/sounds/14.mp3"),
+  require("../assets/sounds/15.mp3"),
+];
 
 export default function MovingCanvas({ style, scrolling }) {
-  useEffect(() => {
-    if (scrolling) {
-      playLoop()
-    } else {
-      stopLoop()
-    }
-  }, [scrolling])
-
   const [sound, setSound] = useState(null);
+  const [componentHeight, setComponentHeight] = useState(0);
+  const [currentRow, setCurrentRow] = useState(null);
 
-  const playLoop = async () => {
+  const rowTimer = useRef(null);
+  const previousRow = useRef(null);
+
+  useEffect(() => {
+    stopLoop()
+    playLoop(soundPaths[currentRow - 1])
+  }, [currentRow])
+
+  const playLoop = async (path) => {
     const { sound: newSound } = await Audio.Sound.createAsync(
-      require('../assets/sounds/c-4.mp3'), // Replace with your tone file
-      {
-        isLooping: true,
-        shouldPlay: true,
-        volume: 1.0,
-      }
+      path,
+      { isLooping: true, shouldPlay: true, volume: 1.0 }
     );
     setSound(newSound);
   };
@@ -41,18 +57,16 @@ export default function MovingCanvas({ style, scrolling }) {
     }
   };
 
-  const [paths, setPaths] = useState([]); // paths: { d: string, color: string }[]
+  const [paths, setPaths] = useState([]);
   const currentPoints = useRef([]);
   const scrollX = useSharedValue(0);
   const hue = useSharedValue(0);
-  const speed = -60; // pixels per second (leftward)
+  const speed = -60;
 
   const [currentHue, setCurrentHue] = useState(0);
-
   const [, setTick] = useState(false);
   const forceRender = () => setTick((v) => !v);
 
-  // Animate scrollX and hue continuously
   useEffect(() => {
     let running = true;
     let lastTimestamp = Date.now();
@@ -66,7 +80,7 @@ export default function MovingCanvas({ style, scrolling }) {
         scrollX.value += speed * deltaSec;
       }
 
-      hue.value = (hue.value + 120 * deltaSec) % 360; // hue changes 120 deg per second
+      hue.value = (hue.value + 120 * deltaSec) % 360;
       runOnJS(setCurrentHue)(hue.value);
 
       lastTimestamp = now;
@@ -74,13 +88,11 @@ export default function MovingCanvas({ style, scrolling }) {
     };
 
     requestAnimationFrame(step);
-
     return () => {
       running = false;
     };
   }, [scrolling]);
 
-  // Setup PanResponder with drawing enabled only when scrolling is true
   const [panResponder, setPanResponder] = useState(null);
 
   useEffect(() => {
@@ -91,6 +103,7 @@ export default function MovingCanvas({ style, scrolling }) {
         if (!scrolling) return;
         const { locationX, locationY } = e.nativeEvent;
         currentPoints.current = [`M ${locationX} ${locationY}`];
+        handleRowChange(locationY);
       },
 
       onPanResponderMove: (e) => {
@@ -98,6 +111,7 @@ export default function MovingCanvas({ style, scrolling }) {
         const { locationX, locationY } = e.nativeEvent;
         currentPoints.current.push(`L ${locationX} ${locationY}`);
         forceRender();
+        handleRowChange(locationY);
       },
 
       onPanResponderRelease: () => {
@@ -108,22 +122,52 @@ export default function MovingCanvas({ style, scrolling }) {
           { d: adjustedPath, color: `hsl(${currentHue}, 60%, 45%)` },
         ]);
         currentPoints.current = [];
+        clearTimeout(rowTimer.current);
+        rowTimer.current = null;
+        previousRow.current = null;
       },
     });
+
     setPanResponder(responder);
-  }, [scrolling, currentHue]);
+  }, [scrolling, currentHue, componentHeight]);
+
+  const handleRowChange = (y) => {
+    const row = getRow(y);
+    if (row !== previousRow.current) {
+      previousRow.current = row;
+
+      clearTimeout(rowTimer.current);
+      rowTimer.current = setTimeout(() => {
+        setCurrentRow(row);
+      }, 100);
+    }
+  };
+
+  const getRow = (y) => {
+    if (componentHeight === 0) return 1;
+    const rowHeight = componentHeight / ROWS;
+    const rowFromTop = Math.floor(y / rowHeight);
+    const rowFromBottom = ROWS - rowFromTop;
+    return Math.max(1, Math.min(ROWS, rowFromBottom));
+  };
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: scrollX.value }],
   }));
 
-  // Current brush color (rainbow)
   const currentColor = `hsl(${currentHue}, 60%, 45%)`;
 
   return (
-    <View {...(panResponder ? panResponder.panHandlers : {})} style={style}>
+    <View
+      {...(panResponder ? panResponder.panHandlers : {})}
+      onLayout={(e) => {
+        const height = e.nativeEvent.layout.height;
+        setComponentHeight(height);
+      }}
+      style={style}
+    >
       <Animated.View style={[{ position: 'absolute' }, animatedStyle]}>
-        <Svg width={10000} height={height}>
+        <Svg width={10000} height={componentHeight}>
           <G>
             {paths.map(({ d, color }, index) => (
               <Path
