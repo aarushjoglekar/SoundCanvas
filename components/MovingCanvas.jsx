@@ -1,3 +1,4 @@
+import { Audio } from 'expo-av';
 import React, { useEffect, useRef, useState } from 'react';
 import { Dimensions, PanResponder, View } from 'react-native';
 import Animated, {
@@ -10,6 +11,36 @@ import Svg, { G, Path } from 'react-native-svg';
 const { height } = Dimensions.get('window');
 
 export default function MovingCanvas({ style, scrolling }) {
+  useEffect(() => {
+    if (scrolling) {
+      playLoop()
+    } else {
+      stopLoop()
+    }
+  }, [scrolling])
+
+  const [sound, setSound] = useState(null);
+
+  const playLoop = async () => {
+    const { sound: newSound } = await Audio.Sound.createAsync(
+      require('../assets/sounds/c-4.mp3'), // Replace with your tone file
+      {
+        isLooping: true,
+        shouldPlay: true,
+        volume: 1.0,
+      }
+    );
+    setSound(newSound);
+  };
+
+  const stopLoop = async () => {
+    if (sound) {
+      await sound.stopAsync();
+      await sound.unloadAsync();
+      setSound(null);
+    }
+  };
+
   const [paths, setPaths] = useState([]); // paths: { d: string, color: string }[]
   const currentPoints = useRef([]);
   const scrollX = useSharedValue(0);
