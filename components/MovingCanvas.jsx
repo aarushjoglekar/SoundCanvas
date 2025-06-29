@@ -37,19 +37,19 @@ export default function MovingCanvas({ style, scrolling }) {
   const previousRow = useRef(null);
 
   useEffect(() => {
-    stopLoop()
-    playLoop(soundPaths[currentRow - 1])
+    stopSound()
+    playSound(soundPaths[currentRow - 1])
   }, [currentRow])
 
-  const playLoop = async (path) => {
+  const playSound = async (path) => {
     const { sound: newSound } = await Audio.Sound.createAsync(
       path,
-      { isLooping: true, shouldPlay: true, volume: 1.0 }
+      { isLooping: false, shouldPlay: true, volume: 1.0 }
     );
     setSound(newSound);
   };
 
-  const stopLoop = async () => {
+  const stopSound = async () => {
     if (sound) {
       await sound.stopAsync();
       await sound.unloadAsync();
@@ -139,7 +139,7 @@ export default function MovingCanvas({ style, scrolling }) {
       clearTimeout(rowTimer.current);
       rowTimer.current = setTimeout(() => {
         setCurrentRow(row);
-      }, 100);
+      }, 200);
     }
   };
 
