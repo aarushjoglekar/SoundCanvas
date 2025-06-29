@@ -37,6 +37,12 @@ export default function MovingCanvas({ style, scrolling }) {
   const previousRow = useRef(null);
 
   useEffect(() => {
+    if (!scrolling) {
+      stopSound()
+    }
+  }, [scrolling])
+
+  useEffect(() => {
     stopSound()
     playSound(soundPaths[currentRow - 1])
   }, [currentRow])

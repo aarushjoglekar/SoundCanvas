@@ -4,6 +4,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import MultiSlider from '@ptomasroos/react-native-multi-slider';
 import { useState } from 'react';
 import { SafeAreaView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import DotCanvas from "../components/DotCanvas";
 import MovingCanvas from "../components/MovingCanvas";
 
 const lightGrey = '#e6e6e6'
@@ -15,7 +16,7 @@ export default function Index() {
   const { width, height } = useWindowDimensions();
 
   const [isPlaying, setIsPlaying] = useState(false)
-  const [isMetronomePlaying, setIsMetronomePlaying] = useState(false)
+  const [isPaintMode, setIsPaintMode] = useState(true)
   const [mood, setMood] = useState(1)
   const [tempo, setTempo] = useState([120])
 
@@ -25,7 +26,7 @@ export default function Index() {
         <View style={{ height: 20 }} />
         <View style={{ flex: 1, flexDirection: 'row' }}>
           <View style={{ flex: 12 }}>
-            <MovingCanvas style={[styles.panel, {overflow: 'hidden'}]} scrolling={isPlaying}/>
+            {isPaintMode ? <MovingCanvas style={[styles.panel, { overflow: 'hidden' }]} scrolling={isPlaying} /> : <DotCanvas style={[styles.panel, { overflow: 'hidden' }]} isActive={isPlaying} />}
             <View style={{ height: 20 }} />
             <View style={{ height: 80, justifyContent: 'center' }}>
               <Text style={[styles.text, { fontSize: 40, textAlign: 'left', marginLeft: 20 }]}>SOUND CANVAS</Text>
@@ -36,7 +37,7 @@ export default function Index() {
             <View style={[styles.panel, { justifyContent: 'space-between', paddingVertical: 10 }]}>
               <View style={{ alignItems: 'center' }}>
                 <View style={{ height: 10 }} />
-                <Text style={[styles.text, { fontSize: 15 }]}>ADJUST MOOD</Text>
+                <Text style={[styles.text, { fontSize: 15 }]}>ADJUST SOUND</Text>
                 <View style={{ height: 10 }} />
                 <View style={{ flexDirection: "row" }} bounces={false}>
                   <ColorBox color={'#f5473e'} onPress={() => setMood(1)} selected={mood == 1} />
@@ -77,8 +78,9 @@ export default function Index() {
             </View>
             <View style={{ height: 20 }} />
             <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-              <TouchableOpacity style={[styles.smallButton, { width: "43%", backgroundColor: isMetronomePlaying ? "#4f9e73" : darkGrey }]} onPress={() => setIsMetronomePlaying(prev => !prev)}>
+              <TouchableOpacity style={[styles.smallButton, { width: "43%", justifyContent: 'space-between', paddingVertical: 10 }]} onPress={() => setIsPaintMode(prev => !prev)} disabled={isPlaying}>
                 <MaterialCommunityIcons name="metronome" size={35} color={lightGrey} />
+                <Text style={styles.text}>{isPaintMode ? "Paint" : "Dot"} Mode</Text>
               </TouchableOpacity>
               <TouchableOpacity style={[styles.smallButton, { width: "53%" }]} onPress={() => setIsPlaying(prev => !prev)}>
                 <Text style={[styles.text, { fontSize: 18 }]}>{isPlaying ? 'PAUSE' : 'PLAY'}</Text>
@@ -108,7 +110,7 @@ const styles = StyleSheet.create({
   text: {
     color: lightGrey,
     fontFamily: 'outfit',
-    textAlign: 'center'
+    textAlign: 'center',
   },
 
   smallButton: {
