@@ -1,11 +1,10 @@
 import AntDesign from '@expo/vector-icons/AntDesign';
 import Feather from '@expo/vector-icons/Feather';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import MultiSlider from '@ptomasroos/react-native-multi-slider';
 import { useState } from 'react';
 import { SafeAreaView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import DotCanvas from "../components/DotCanvas";
-import MovingCanvas from "../components/MovingCanvas";
 
 const lightGrey = '#e6e6e6'
 const mediumLightGrey = '#8f8e96'
@@ -16,9 +15,9 @@ export default function Index() {
   const { width, height } = useWindowDimensions();
 
   const [isPlaying, setIsPlaying] = useState(false)
-  const [isPaintMode, setIsPaintMode] = useState(true)
+  const [toBeCleared, setToBeCleared] = useState(true)
   const [mood, setMood] = useState(1)
-  const [tempo, setTempo] = useState([120])
+  const [dotSize, setDotSize] = useState([7])
 
   return (
     <View style={styles.container}>
@@ -26,7 +25,7 @@ export default function Index() {
         <View style={{ height: 20 }} />
         <View style={{ flex: 1, flexDirection: 'row' }}>
           <View style={{ flex: 12 }}>
-            {isPaintMode ? <MovingCanvas style={[styles.panel, { overflow: 'hidden' }]} scrolling={isPlaying} /> : <DotCanvas style={[styles.panel, { overflow: 'hidden' }]} isActive={isPlaying} />}
+            <DotCanvas style={[styles.panel, { overflow: 'hidden' }]} isActive={isPlaying} size={dotSize[0]} toBeCleared={toBeCleared} setToBeCleared={setToBeCleared} />
             <View style={{ height: 20 }} />
             <View style={{ height: 80, justifyContent: 'center' }}>
               <Text style={[styles.text, { fontSize: 40, textAlign: 'left', marginLeft: 20 }]}>SOUND CANVAS</Text>
@@ -53,14 +52,14 @@ export default function Index() {
                 </View>
               </View>
               <View style={{ alignItems: 'center' }}>
-                <Text style={[styles.text, { fontSize: 15 }]}>ADJUST SPEED - {tempo} BPM</Text>
+                <Text style={[styles.text, { fontSize: 15 }]}>ADJUST PAINT SIZE</Text>
                 <MultiSlider
-                  values={tempo}
-                  min={60}
-                  max={160}
+                  values={dotSize}
+                  min={2}
+                  max={10}
                   step={1}
                   sliderLength={width / 5}
-                  onValuesChange={setTempo}
+                  onValuesChange={setDotSize}
                   selectedStyle={{ backgroundColor: mediumLightGrey }}
                   unselectedStyle={{ backgroundColor: lightGrey }}
                   markerStyle={{
@@ -78,9 +77,9 @@ export default function Index() {
             </View>
             <View style={{ height: 20 }} />
             <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-              <TouchableOpacity style={[styles.smallButton, { width: "43%", justifyContent: 'space-between', paddingVertical: 10 }]} onPress={() => setIsPaintMode(prev => !prev)} disabled={isPlaying}>
-                <MaterialCommunityIcons name="metronome" size={35} color={lightGrey} />
-                <Text style={styles.text}>{isPaintMode ? "Paint" : "Dot"} Mode</Text>
+              <TouchableOpacity style={[styles.smallButton, { width: "43%", justifyContent: 'space-between', paddingVertical: 12 }]} onPress={() => setToBeCleared(true)}>
+                <FontAwesome5 name="eraser" size={33} color={lightGrey} />
+                <Text style={styles.text}>CLEAR</Text>
               </TouchableOpacity>
               <TouchableOpacity style={[styles.smallButton, { width: "53%" }]} onPress={() => setIsPlaying(prev => !prev)}>
                 <Text style={[styles.text, { fontSize: 18 }]}>{isPlaying ? 'PAUSE' : 'PLAY'}</Text>

@@ -21,12 +21,19 @@ const soundPaths = [
     require("../assets/sounds/15.mp3"),
 ];
 
-export default function DotCanvas({ style, isActive }) {
+export default function DotCanvas({ style, isActive, size, toBeCleared, setToBeCleared }) {
     const [dots, setDots] = useState([]);
     const [currentHue, setCurrentHue] = useState(0);
     const hueRef = useRef(0);
     const viewHeight = useRef(0);
     const soundRef = useRef(null);
+
+    useEffect(() => {
+        if (toBeCleared) {
+            setDots([])
+            setToBeCleared(false)
+        }
+    }, [toBeCleared])
 
     useEffect(() => {
         if (!isActive) {
@@ -124,7 +131,7 @@ export default function DotCanvas({ style, isActive }) {
                         key={index}
                         cx={dot.x}
                         cy={dot.y}
-                        r="5"
+                        r={size}
                         fill={dot.color}
                     />
                 ))}
