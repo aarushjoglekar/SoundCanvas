@@ -1,4 +1,4 @@
-import { Audio } from 'expo-av';
+import { useAudioPlayer } from 'expo-audio';
 import React, { useEffect, useRef, useState } from 'react';
 import { PanResponder, View } from 'react-native';
 import Svg, { Circle, Rect } from 'react-native-svg';
@@ -31,7 +31,12 @@ export default function DotCanvas({ style, isActive, size, toBeCleared, setToBeC
   const hueRef = useRef(0);
   const viewHeight = useRef(0);
   const [canvasHeight, setCanvasHeight] = useState(0);
-  const soundRef = useRef(null);
+
+  // Create a useAudioPlayer hook for each sound
+  const players = soundPaths.map((path) => useAudioPlayer(path));
+
+  // Keep track of currently playing player
+  const currentPlayerRef = useRef(null);
 
   // Clear dots if triggered
   useEffect(() => {
@@ -40,20 +45,6 @@ export default function DotCanvas({ style, isActive, size, toBeCleared, setToBeC
       setToBeCleared(false);
     }
   }, [toBeCleared]);
-
-  // Stop sound on deactivate
-  useEffect(() => {
-    if (!isActive) {
-      async function stopSound() {
-        if (soundRef.current) {
-          await soundRef.current.stopAsync();
-          await soundRef.current.unloadAsync();
-          soundRef.current = null;
-        }
-      }
-      stopSound();
-    }
-  }, [isActive]);
 
   // Animate hue color
   useEffect(() => {
@@ -70,24 +61,53 @@ export default function DotCanvas({ style, isActive, size, toBeCleared, setToBeC
     };
   }, []);
 
-  // Stop and play appropriate sound for row
-  const stopAndPlaySound = async (rowIndex) => {
+  // Stop all sounds
+  const stopAllSounds = async () => {
     try {
-      if (soundRef.current) {
-        await soundRef.current.stopAsync();
-        await soundRef.current.unloadAsync();
-        soundRef.current = null;
+      for (let player of players) {
+        await player.pause();
       }
-      const { sound } = await Audio.Sound.createAsync(
-        soundPaths[rowIndex],
-        { shouldPlay: true, isLooping: false }
-      );
-      soundRef.current = sound;
+      currentPlayerRef.current = null;
+    } catch (e) {
+      console.warn("Error stopping all sounds", e);
+    }
+  };
+
+  // Stop sounds when deactivated
+  useEffect(() => {
+    if (!isActive) {
+      stopAllSounds();
+    }
+  }, [isActive]);
+
+  // Play a sound for a specific row, stopping the previous one
+  const playSoundForRow = async (rowIndex) => {
+    if (!isActive) return;
+    try {
+      const player = players[rowIndex];
+
+      // If another player is playing, pause it
+      if (currentPlayerRef.current && currentPlayerRef.current !== player) {
+        await currentPlayerRef.current.pause();
+      }
+
+      // If the same player is already playing, pause it first to restart
+      if (currentPlayerRef.current === player) {
+        await player.pause();
+      }
+
+      // Play current player (will restart if it was already playing)
+      await player.play();
+
+      // Update reference
+      currentPlayerRef.current = player;
     } catch (error) {
       console.error("Error playing sound:", error);
     }
   };
 
+
+  // Map Y coordinate to row index
   const getRowFromY = (y) => {
     if (viewHeight.current === 0) return 0;
     const rowHeight = viewHeight.current / LAYER_COUNT;
@@ -96,7 +116,7 @@ export default function DotCanvas({ style, isActive, size, toBeCleared, setToBeC
     return Math.max(0, Math.min(LAYER_COUNT - 1, rowFromBottom));
   };
 
-  // Pan responder for tapping
+  // Pan responder for taps
   const panResponder = PanResponder.create({
     onStartShouldSetPanResponder: () => true,
     onPanResponderGrant: async (evt) => {
@@ -113,7 +133,7 @@ export default function DotCanvas({ style, isActive, size, toBeCleared, setToBeC
 
       // Play corresponding sound
       const rowIndex = getRowFromY(locationY);
-      await stopAndPlaySound(rowIndex);
+      await playSoundForRow(rowIndex);
     },
     onPanResponderMove: () => { },
     onPanResponderRelease: () => { },
