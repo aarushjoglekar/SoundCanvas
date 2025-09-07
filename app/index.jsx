@@ -2,8 +2,8 @@ import AntDesign from '@expo/vector-icons/AntDesign';
 import Feather from '@expo/vector-icons/Feather';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import MultiSlider from '@ptomasroos/react-native-multi-slider';
-import { useState } from 'react';
-import { SafeAreaView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { SafeAreaView, StyleSheet, Switch, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import DotCanvas from "../components/DotCanvas";
 
 const lightGrey = '#e6e6e6'
@@ -12,12 +12,18 @@ const mediumGrey = '#343337'
 const darkGrey = '#201f21'
 
 export default function Index() {
+  const [isDotMode, setIsDotMode] = useState(true)
+
   const { width, height } = useWindowDimensions();
 
   const [isPlaying, setIsPlaying] = useState(false)
   const [toBeCleared, setToBeCleared] = useState(true)
   const [mood, setMood] = useState(1)
   const [dotSize, setDotSize] = useState([7])
+
+  useEffect(() => {
+    setIsPlaying(false)
+  }, [isDotMode])
 
   return (
     <View style={styles.container}>
@@ -33,26 +39,24 @@ export default function Index() {
           </View>
           <View style={{ width: 20 }} />
           <View style={{ flex: 5 }}>
-            <View style={[styles.panel, { justifyContent: 'space-between', paddingVertical: 10 }]}>
-              <View style={{ alignItems: 'center' }}>
+            <View style={[styles.panel, { justifyContent: 'space-evenly', paddingVertical: 10 }]}>
+              <View style={{ alignItems: 'center', marginBottom: 20 }}>
                 <View style={{ height: 10 }} />
-                <Text style={[styles.text, { fontSize: 15 }]}>ADJUST SOUND</Text>
+                <Text style={[styles.text, { fontSize: 15 }]}>SWITCH MUSIC MODE</Text>
+                <View style={{ height: 20 }} />
+                <Switch
+                  trackColor={{ true: "#6b7280", false: "6b7280" }}
+                  thumbColor={isDotMode ? "#ffe70f" : "#ffc60d"}
+                  ios_backgroundColor="#3e3e3e"
+                  onValueChange={setIsDotMode}
+                  value={isDotMode}
+                  style={{ transform: [{ scaleX: 1.25 }, { scaleY: 1.2 }] }}
+                />
                 <View style={{ height: 10 }} />
-                <View style={{ flexDirection: "row" }} bounces={false}>
-                  <ColorBox color={'#f5473e'} onPress={() => setMood(1)} selected={mood == 1} />
-                  <ColorBox color={'orange'} onPress={() => setMood(2)} selected={mood == 2} />
-                  <ColorBox color={'#f7f437'} onPress={() => setMood(3)} selected={mood == 3} />
-                  <ColorBox color={'#2cd14f'} onPress={() => setMood(4)} selected={mood == 4} />
-                </View>
-                <View style={{ height: 10 }} />
-                <View style={{ flexDirection: "row" }} bounces={false}>
-                  <ColorBox color={'#2c47bf'} onPress={() => setMood(5)} selected={mood == 5} />
-                  <ColorBox color={'#471b96'} onPress={() => setMood(6)} selected={mood == 6} />
-                  <ColorBox color={'#7F00FF'} onPress={() => setMood(7)} selected={mood == 7} />
-                </View>
+                <Text style={[styles.text, { fontSize: 11 }]}>Currently: {isDotMode ? "Dot Mode" : "Paint Mode"}</Text>
               </View>
-              <View style={{ alignItems: 'center' }}>
-                <Text style={[styles.text, { fontSize: 15 }]}>ADJUST PAINT SIZE</Text>
+              <View style={{ alignItems: 'center', marginTop: 20 }}>
+                <Text style={[styles.text, { fontSize: 15 }]}>ADJUST BRUSH SIZE</Text>
                 <MultiSlider
                   values={dotSize}
                   min={2}
@@ -91,12 +95,6 @@ export default function Index() {
         </View>
       </SafeAreaView>
     </View>
-  );
-}
-
-function ColorBox({ color, onPress, selected }) {
-  return (
-    <TouchableOpacity style={{ backgroundColor: color, aspectRatio: 1, height: 30, borderRadius: 3, marginLeft: 7, borderColor: lightGrey, borderWidth: selected ? 1 : 0 }} onPress={onPress} />
   );
 }
 
